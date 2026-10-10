@@ -21,12 +21,12 @@ Do not run `npm publish` locally: `prepublishOnly` stops it, because a local pub
 
 ### 1. Create the npm package
 
-npm trusted publishing can only be added to a package that already exists, so publish an empty placeholder first, as was done for `@qrxcodes/mcp` (`0.0.0-stage`). In an empty folder outside this repository, create `package.json` with:
+npm trusted publishing can only be added to a package that already exists, so publish an empty placeholder first, as was done for `@qrxcodes/mcp` (`0.0.0-stage`). In an empty folder outside this repository, create `package.json` with the following. npm refuses `0.0.0-*` versions for a new package, so use `0.0.1-stage`:
 
 ```json
 {
   "name": "n8n-nodes-qrx",
-  "version": "0.0.0-stage",
+  "version": "0.0.1-stage",
   "description": "Placeholder for the QRX n8n node. Install 0.1.0 or later.",
   "license": "MIT",
   "repository": { "type": "git", "url": "git+https://github.com/qrxcodes/n8n-nodes-qrx.git" }
@@ -72,10 +72,10 @@ Watch the **Publish** run in the Actions tab. Then check it on npm (the version 
 npx @n8n/scan-community-package n8n-nodes-qrx
 ```
 
-Optionally mark the placeholder as deprecated so nobody installs it:
+Optionally mark the placeholders as deprecated so nobody installs it:
 
 ```bash
-npm deprecate n8n-nodes-qrx@0.0.0-stage "Placeholder. Install 0.1.0 or later."
+npm deprecate n8n-nodes-qrx@"<0.1.0" "Placeholder. Install 0.1.0 or later."
 ```
 
 ### 4. Submit for verification in the n8n Creator Portal
