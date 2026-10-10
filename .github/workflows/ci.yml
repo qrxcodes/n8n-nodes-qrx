@@ -70,16 +70,13 @@ jobs:
           echo
           docker exec n8n n8n --version
 
+      # n8n writes the node and credential types it loaded to its static cache at start.
       - name: Check the nodes and the credential are loaded
         run: |
-          for f in nodes credentials; do
-            for i in $(seq 1 30); do
-              curl -s --compressed http://localhost:5678/types/$f.json -o $f.json
-              node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))' $f.json 2> /dev/null && break
-              sleep 2
-            done
-            echo "$f.json: $(wc -c < $f.json) bytes, starts with: $(head -c 120 $f.json)"
-          done
+          types=$(docker exec n8n sh -c 'find / -path "*/types/nodes.json" -not -path "/proc/*" 2>/dev/null | head -1')
+          echo "Types file: $types"
+          docker exec n8n cat "$types" > nodes.json
+          docker exec n8n cat "$(dirname "$types")/credentials.json" > credentials.json
           node -e '
             const nodes = require("./nodes.json").map((t) => t.name);
             const credentials = require("./credentials.json").map((t) => t.name);
