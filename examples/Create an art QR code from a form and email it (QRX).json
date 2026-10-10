@@ -1,0 +1,105 @@
+{
+  "name": "Create an art QR code from a form and email it (QRX)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Art QR code from a form\n\nSomebody describes a picture and gives a link. QRX paints a QR code into that picture, checks that it scans, and the workflow emails the PNG to them.\n\n**Set up**\n1. Install the QRX community node: **Settings → Community nodes → Install → `n8n-nodes-qrx`**.\n2. In **Create QR code**, add a QRX API credential with a key from https://qrx.codes/developers/keys (a free account works).\n3. In **Email the QR code**, connect your Gmail account.\n4. Activate the workflow and open the form's production URL.\n\nCreating a code usually takes under a minute; the QRX node waits for it.",
+        "height": 380,
+        "width": 420
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-520, -140],
+      "id": "0b3f7a54-5d0e-4f8b-9a7e-2c1d6e4f8a01",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "formTitle": "Make an art QR code",
+        "formDescription": "Describe a picture and give a link. We'll email you a QR code painted into that picture.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Picture",
+              "fieldType": "textarea",
+              "placeholder": "A lighthouse on a cliff at sunset",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Link",
+              "placeholder": "https://example.com",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Email",
+              "fieldType": "email",
+              "placeholder": "you@example.com",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [0, 0],
+      "id": "1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e01",
+      "name": "On form submission",
+      "webhookId": "7e0f1a2b-3c4d-4e5f-8a9b-0c1d2e3f4a51"
+    },
+    {
+      "parameters": {
+        "resource": "code",
+        "operation": "create",
+        "prompt": "={{ $json.Picture }}",
+        "destination": "={{ $json.Link }}",
+        "waitForCompletion": true,
+        "timeout": 300,
+        "simplify": true,
+        "options": {
+          "downloadImage": true,
+          "binaryPropertyName": "data"
+        }
+      },
+      "type": "n8n-nodes-qrx.qrx",
+      "typeVersion": 1,
+      "position": [240, 0],
+      "id": "2d3e4f5a-6b7c-4d8e-9f0a-1b2c3d4e5f02",
+      "name": "Create QR code"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('On form submission').item.json.Email }}",
+        "subject": "Your QR code is ready",
+        "message": "=<p>Here is your QR code. It is attached as a PNG.</p>\n<p><img src=\"{{ $json.imageUrl }}\" alt=\"QR code\" width=\"384\"></p>\n<p>Scans go to {{ $json.destination }} through {{ $json.shortUrl }}.</p>\n<p>View it on QRX: {{ $json.pageUrl }}</p>",
+        "options": {
+          "appendAttribution": false,
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {
+                "property": "data"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [480, 0],
+      "id": "3e4f5a6b-7c8d-4e9f-8a1b-2c3d4e5f6a03",
+      "name": "Email the QR code",
+      "webhookId": "8f1a2b3c-4d5e-4f6a-9b0c-1d2e3f4a5b62"
+    }
+  ],
+  "connections": {
+    "On form submission": {
+      "main": [[{ "node": "Create QR code", "type": "main", "index": 0 }]]
+    },
+    "Create QR code": {
+      "main": [[{ "node": "Email the QR code", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "pinData": {},
+  "meta": {}
+}

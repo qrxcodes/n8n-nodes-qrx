@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Lint, build and test (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22, 24]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+      - run: npm test
+      - run: npm pack --dry-run
+
+  n8n:
+    name: Loads in n8n
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm pack
+
+      # The same layout as a manual community-node install: ~/.n8n/nodes/node_modules.
+      - name: Install the package where n8n looks for community nodes
+        run: |
+          mkdir -p n8n-home/nodes
+          cd n8n-home/nodes
+          npm init -y > /dev/null
+          npm install --no-audit --no-fund ../../n8n-nodes-qrx-*.tgz
+          sudo chown -R 1000:1000 ../../n8n-home
+
+      - name: Start n8n
+        run: |
+          docker run -d --name n8n -p 5678:5678 \
+            -v "$PWD/n8n-home:/home/node/.n8n" \
+            -v "$PWD/examples:/examples:ro" \
+            docker.n8n.io/n8nio/n8n:latest
+          for i in $(seq 1 90); do
+            curl -sf http://localhost:5678/healthz > /dev/null && break
+            sleep 2
+          done
+          curl -sf http://localhost:5678/healthz
+          docker exec n8n n8n --version
+
+      - name: Check the nodes and the credential are loaded
+        run: |
+          curl -sf http://localhost:5678/types/nodes.json -o nodes.json
+          curl -sf http://localhost:5678/types/credentials.json -o credentials.json
+          node -e '
+            const nodes = require("./nodes.json").map((t) => t.name);
+            const credentials = require("./credentials.json").map((t) => t.name);
+            const missing = ["n8n-nodes-qrx.qrx", "n8n-nodes-qrx.qrxTrigger"].filter((n) => !nodes.includes(n));
+            if (!credentials.includes("qrxApi")) missing.push("qrxApi credential");
+            if (missing.length) { console.error("Not loaded:", missing.join(", ")); process.exit(1); }
+            console.log("n8n loaded both QRX nodes and the QRX API credential");
+          '
+
+      - name: Import the example workflow
+        run: |
+          for f in examples/*.json; do
+            docker exec n8n n8n import:workflow --input="/examples/$(basename "$f")"
+          done
+
+      - name: n8n logs
+        if: always()
+        run: docker logs n8n 2>&1 | tail -100
