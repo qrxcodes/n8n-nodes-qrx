@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: [20, 22, 24]
+        node: [22, 24]
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -62,17 +62,24 @@ jobs:
             -v "$PWD/n8n-home:/home/node/.n8n" \
             -v "$PWD/examples:/examples:ro" \
             docker.n8n.io/n8nio/n8n:latest
-          for i in $(seq 1 90); do
-            curl -sf http://localhost:5678/healthz > /dev/null && break
+          for i in $(seq 1 120); do
+            curl -sf http://localhost:5678/healthz/readiness > /dev/null && break
             sleep 2
           done
-          curl -sf http://localhost:5678/healthz
+          curl -sf http://localhost:5678/healthz/readiness
+          echo
           docker exec n8n n8n --version
 
       - name: Check the nodes and the credential are loaded
         run: |
-          curl -sf http://localhost:5678/types/nodes.json -o nodes.json
-          curl -sf http://localhost:5678/types/credentials.json -o credentials.json
+          for f in nodes credentials; do
+            for i in $(seq 1 30); do
+              curl -s --compressed http://localhost:5678/types/$f.json -o $f.json
+              node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))' $f.json 2> /dev/null && break
+              sleep 2
+            done
+            echo "$f.json: $(wc -c < $f.json) bytes, starts with: $(head -c 120 $f.json)"
+          done
           node -e '
             const nodes = require("./nodes.json").map((t) => t.name);
             const credentials = require("./credentials.json").map((t) => t.name);

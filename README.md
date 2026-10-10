@@ -46,7 +46,7 @@ The node sends the key as `Authorization: Bearer <key>`. n8n checks the credenti
 
 ## Compatibility
 
-Built with the `n8n-node` CLI against `n8n-workflow` 2.x. CI installs the package into the current n8n Docker image and checks that n8n loads both nodes and the credential. Self-hosted n8n needs Node.js 20 or later.
+Built with the `n8n-node` CLI against `n8n-workflow` 2.x. CI installs the package into the current n8n Docker image and checks that n8n loads both nodes and the credential. Developing the node needs Node.js 22 or later.
 
 ## Usage
 
