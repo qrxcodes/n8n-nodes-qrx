@@ -1,5 +1,7 @@
 {
+  "id": "QrxFormToQrCode1",
   "name": "Create an art QR code from a form and email it (QRX)",
+  "active": false,
   "nodes": [
     {
       "parameters": {
@@ -9,7 +11,10 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [-520, -140],
+      "position": [
+        -520,
+        -140
+      ],
       "id": "0b3f7a54-5d0e-4f8b-9a7e-2c1d6e4f8a01",
       "name": "Sticky Note"
     },
@@ -42,7 +47,10 @@
       },
       "type": "n8n-nodes-base.formTrigger",
       "typeVersion": 2.2,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "id": "1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e01",
       "name": "On form submission",
       "webhookId": "7e0f1a2b-3c4d-4e5f-8a9b-0c1d2e3f4a51"
@@ -63,7 +71,10 @@
       },
       "type": "n8n-nodes-qrx.qrx",
       "typeVersion": 1,
-      "position": [240, 0],
+      "position": [
+        240,
+        0
+      ],
       "id": "2d3e4f5a-6b7c-4d8e-9f0a-1b2c3d4e5f02",
       "name": "Create QR code"
     },
@@ -85,7 +96,10 @@
       },
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
-      "position": [480, 0],
+      "position": [
+        480,
+        0
+      ],
       "id": "3e4f5a6b-7c8d-4e9f-8a1b-2c3d4e5f6a03",
       "name": "Email the QR code",
       "webhookId": "8f1a2b3c-4d5e-4f6a-9b0c-1d2e3f4a5b62"
@@ -93,13 +107,31 @@
   ],
   "connections": {
     "On form submission": {
-      "main": [[{ "node": "Create QR code", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Create QR code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Create QR code": {
-      "main": [[{ "node": "Email the QR code", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Email the QR code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "settings": { "executionOrder": "v1" },
+  "settings": {
+    "executionOrder": "v1"
+  },
   "pinData": {},
   "meta": {}
 }
